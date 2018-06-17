@@ -49,8 +49,28 @@ The HTML for this form might resemble the following:
 To parse and validate the form, use the following code in the handler:
 
 ```go
-var f &RegistrationForm{}
+f := &RegistrationForm{}
 fieldErrs, err := ezform.Parse(r, f)
 ```
 
 The first return value is a map of field names to errors that were encountered during validation. This map will be empty if no errors were encountered. The second return value will indicate any internal errors that were encountered during parsing.
+
+### Validators
+
+The example above introduced the `Required` validator, but there are others:
+
+#### InSlice
+
+The `InSlice` validator checks to see if the provided value is found within a slice.
+
+```go
+validCountries := []string{
+    "Australia",
+    "Canada",
+    "Spain",
+}
+
+func (r RegistrationForm) ValidateCountry(v string) error {
+    return ezform.InSlice(validCountries, v)
+}
+```
