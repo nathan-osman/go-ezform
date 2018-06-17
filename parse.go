@@ -38,11 +38,11 @@ func Parse(r *http.Request, v interface{}) (map[string]error, error) {
 			fVal    = vVal.Field(i)
 			fStrVal = r.Form.Get(fStruct.Name)
 		)
+		fmt.Sscanf(fStrVal, "%v", fVal.Addr().Interface())
 		if err := validate(vType, fStruct, vVal, fVal); err != nil {
 			fieldErrors[fStruct.Name] = err
 			continue
 		}
-		fmt.Sscanf(fStrVal, "%v", fVal.Addr().Interface())
 	}
 	return fieldErrors, nil
 }

@@ -18,6 +18,10 @@ type parseTestForm struct {
 	TimeVal   time.Time
 }
 
+func (p parseTestForm) ValidateStringVal(v string) error {
+	return Required(v)
+}
+
 var parseTestReference = &parseTestForm{
 	StringVal: "test",
 	IntVal:    42,
@@ -37,6 +41,16 @@ func simulateRequest(v url.Values, f *parseTestForm) (map[string]error, error) {
 	)
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	return Parse(r, f)
+}
+
+func TestMissingField(t *testing.T) {
+	fieldErrs, err := simulateRequest(url.Values{}, &parseTestForm{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(fieldErrs) != 1 || fieldErrs["StringVal"] != ErrFieldRequired {
+		t.Fatal("error expected")
+	}
 }
 
 func TestStoreValues(t *testing.T) {
