@@ -1,6 +1,7 @@
 ## go-ezform
 
 [![Build Status](https://travis-ci.org/nathan-osman/go-ezform.svg?branch=master)](https://travis-ci.org/nathan-osman/go-ezform)
+[![Coverage Status](https://coveralls.io/repos/github/nathan-osman/go-ezform/badge.svg?branch=master)](https://coveralls.io/github/nathan-osman/go-ezform?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/nathan-osman/go-ezform)](https://goreportcard.com/report/github.com/nathan-osman/go-ezform)
 [![GoDoc](https://godoc.org/github.com/nathan-osman/go-ezform?status.svg)](https://godoc.org/github.com/nathan-osman/go-ezform)
 [![MIT License](http://img.shields.io/badge/license-MIT-9370d8.svg?style=flat)](http://opensource.org/licenses/MIT)
