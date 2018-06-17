@@ -59,9 +59,9 @@ The first return value is a map of field names to errors that were encountered d
 
 The example above introduced the `Required` validator, but there are others:
 
-#### InSlice
+#### Contains
 
-The `InSlice` validator checks to see if the provided value is found within a slice.
+The `Contains` validator checks to see if the provided value is found within a slice or the keys of a map.
 
 ```go
 validCountries := []string{
@@ -71,6 +71,6 @@ validCountries := []string{
 }
 
 func (r RegistrationForm) ValidateCountry(v string) error {
-    return ezform.InSlice(validCountries, v)
+    return ezform.Contains(validCountries, v)
 }
 ```
