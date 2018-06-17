@@ -17,9 +17,6 @@ var (
 // represents any global errors that occurred during validation. If both
 // return values are nil, the form was successfully validated.
 func Parse(r *http.Request, v interface{}) (map[string]error, error) {
-	if err := r.ParseForm(); err != nil {
-		return nil, err
-	}
 	vType := reflect.TypeOf(v)
 	if vType.Kind() != reflect.Ptr {
 		return nil, errPtrRequired

@@ -33,14 +33,27 @@ func toURLVal(v interface{}) []string {
 	return []string{fmt.Sprintf("%v", v)}
 }
 
-func simulateRequest(v url.Values, f *parseTestForm) (map[string]error, error) {
+func simulateRequest(v url.Values, f interface{}) (map[string]error, error) {
 	r := httptest.NewRequest(
 		http.MethodPost,
 		"/",
 		strings.NewReader(v.Encode()),
 	)
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	if err := r.ParseForm(); err != nil {
+		return nil, err
+	}
 	return Parse(r, f)
+}
+
+func TestBadStruct(t *testing.T) {
+	if _, err := simulateRequest(url.Values{}, parseTestForm{}); err != errPtrRequired {
+		t.Fatalf("%v != %v", err, errPtrRequired)
+	}
+	var str string
+	if _, err := simulateRequest(url.Values{}, &str); err != errPtrRequired {
+		t.Fatalf("%v != %v", err, errPtrRequired)
+	}
 }
 
 func TestMissingField(t *testing.T) {
