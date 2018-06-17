@@ -1,68 +1,59 @@
 package ezform
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 )
 
-type TestForm struct {
-	StringVal string `form:"required"`
-	IntVal    int64
+type parseTestForm struct {
+	StringVal string
+	IntVal    int
 	BoolVal   bool
+	TimeVal   time.Time
 }
 
-var TestFormData = []struct {
-	Data   url.Values
-	Form   *TestForm
-	Errors map[string][]error
-}{
-	{
-		Data: url.Values{},
-		Errors: map[string][]error{
-			"StringVal": []error{ErrFieldRequired},
-		},
-	},
-	{
-		Data: url.Values{
-			"StringVal": []string{"test"},
-			"IntVal":    []string{"123"},
-			"BoolVal":   []string{"checked"},
-		},
-		Form: &TestForm{
-			StringVal: "test",
-			IntVal:    123,
-			BoolVal:   true,
-		},
-	},
+var parseTestReference = &parseTestForm{
+	StringVal: "test",
+	IntVal:    42,
+	BoolVal:   true,
+	TimeVal:   time.Time{},
 }
 
-func TestParseEmptyForm(t *testing.T) {
-	for _, v := range TestFormData {
-		var (
-			r = httptest.NewRequest(
-				http.MethodPost,
-				"/",
-				strings.NewReader(v.Data.Encode()),
-			)
-			f = &TestForm{}
-		)
-		r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-		e, err := Parse(r, f)
-		if err != nil {
-			t.Fatal(err)
+func toURLVal(v interface{}) []string {
+	return []string{fmt.Sprintf("%v", v)}
+}
+
+func simulateRequest(v url.Values, f *parseTestForm) (map[string]error, error) {
+	r := httptest.NewRequest(
+		http.MethodPost,
+		"/",
+		strings.NewReader(v.Encode()),
+	)
+	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	return Parse(r, f)
+}
+
+func TestStoreValues(t *testing.T) {
+	var (
+		v = url.Values{
+			"StringVal": toURLVal(parseTestReference.StringVal),
+			"IntVal":    toURLVal(parseTestReference.IntVal),
+			"BoolVal":   toURLVal(parseTestReference.BoolVal),
+			"TimeVal":   toURLVal(parseTestReference.TimeVal),
 		}
-		if len(v.Errors) == 0 {
-			if !reflect.DeepEqual(f, v.Form) {
-				t.Fatalf("%#v != %#v", f, v.Form)
-			}
-		} else {
-			if !reflect.DeepEqual(e, v.Errors) {
-				t.Fatalf("%#v != %#v", e, v.Errors)
-			}
-		}
+		f = &parseTestForm{}
+	)
+	fieldErrs, err := simulateRequest(v, f)
+	if len(fieldErrs) != 0 || err != nil {
+		t.Fatal("errors encountered during storage")
+	}
+	if !reflect.DeepEqual(f, parseTestReference) {
+		t.Fatalf("%v != %v", f, parseTestReference)
 	}
 }
