@@ -6,23 +6,21 @@ import (
 	"testing"
 )
 
-const validValue = "valid"
+var errField2 = errors.New("Field2 is invalid")
 
-var errInvalidValue = errors.New("invalid value")
-
-type validateStruct struct {
+type validateTestForm struct {
 	Field1, Field2, Field3, Field4 string
 }
 
-func (v validateStruct) ValidateField2(s string) error {
-	if s != validValue {
-		return errInvalidValue
+func (v validateTestForm) ValidateField2(s string) error {
+	if len(s) == 0 {
+		return errField2
 	}
 	return nil
 }
 
-func (v validateStruct) ValidateField3(i int) error { return nil }
-func (v validateStruct) ValidateField4(s string)    {}
+func (v validateTestForm) ValidateField3(i int) error { return nil }
+func (v validateTestForm) ValidateField4(s string)    {}
 
 func validateField(v interface{}, fieldName string) error {
 	var (
@@ -35,31 +33,31 @@ func validateField(v interface{}, fieldName string) error {
 }
 
 func TestValidateNoValidator(t *testing.T) {
-	if err := validateField(validateStruct{}, "Field1"); err != nil {
+	if err := validateField(validateTestForm{}, "Field1"); err != nil {
 		t.Fatalf("%s != nil", err)
 	}
 }
 
 func TestValidateValidValue(t *testing.T) {
-	if err := validateField(validateStruct{Field2: validValue}, "Field2"); err != nil {
+	if err := validateField(validateTestForm{Field2: "test"}, "Field2"); err != nil {
 		t.Fatalf("%s != nil", err)
 	}
 }
 
 func TestValidateInvalidValue(t *testing.T) {
-	if err := validateField(validateStruct{}, "Field2"); err != errInvalidValue {
-		t.Fatalf("%s != %s", err, errInvalidValue)
+	if err := validateField(validateTestForm{}, "Field2"); err != errField2 {
+		t.Fatalf("%s != %s", err, errField2)
 	}
 }
 
 func TestValidateInvalidParameter(t *testing.T) {
-	if err := validateField(validateStruct{}, "Field3"); err != errInvalidParameter {
+	if err := validateField(validateTestForm{}, "Field3"); err != errInvalidParameter {
 		t.Fatalf("%s != %s", err, errInvalidParameter)
 	}
 }
 
 func TestValidateInvalidReturnType(t *testing.T) {
-	if err := validateField(validateStruct{}, "Field4"); err != errInvalidReturnType {
+	if err := validateField(validateTestForm{}, "Field4"); err != errInvalidReturnType {
 		t.Fatalf("%s != %s", err, errInvalidReturnType)
 	}
 }
