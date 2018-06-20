@@ -19,7 +19,7 @@ type parseTestForm struct {
 }
 
 func (p parseTestForm) ValidateStringVal(v string) error {
-	return Required(v)
+	return IsNonZero(v)
 }
 
 var parseTestReference = &parseTestForm{
@@ -61,7 +61,7 @@ func TestMissingField(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(fieldErrs) != 1 || fieldErrs["StringVal"] != ErrFieldRequired {
+	if len(fieldErrs) != 1 || fieldErrs["StringVal"] != ErrValueIsZero {
 		t.Fatal("error expected")
 	}
 }

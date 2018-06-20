@@ -24,7 +24,7 @@ Next, create validation methods for each field you wish to validate.
 
 ```go
 func (r RegistrationForm) ValidateName(v string) error {
-    return ezform.Required(v)
+    return ezform.IsNonZero(v)
 }
 ```
 
@@ -59,7 +59,7 @@ The first return value is a map of field names to errors that were encountered d
 
 ### Validators
 
-The example above introduced the `Required` validator, but there are others:
+The example above introduced the `IsNonZero` validator, but there are others:
 
 #### Contains
 
