@@ -43,7 +43,7 @@ func simulateRequest(v url.Values, f interface{}) (map[string]error, error) {
 	if err := r.ParseForm(); err != nil {
 		return nil, err
 	}
-	return Parse(r, f)
+	return Parse(r, f, nil)
 }
 
 func TestBadStruct(t *testing.T) {

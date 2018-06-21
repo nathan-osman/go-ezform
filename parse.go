@@ -11,12 +11,12 @@ var (
 	errPtrRequired = errors.New("Parse() requires a pointer to struct")
 )
 
-// Parse reads form values for a request, validates them, and stores their
-// value in the provided struct. The first return value maps field names to
-// any errors that occurred during field validation. The second return value
-// represents any global errors that occurred during validation. If both
-// return values are nil, the form was successfully validated.
-func Parse(r *http.Request, v interface{}) (map[string]error, error) {
+// Parse reads form values for a request, validates them, and stores their value in the provided struct.
+// If a value is provided for the param parameter, it will be passed to the validation methods.
+// The first return value maps field names to any errors that occurred during field validation.
+// The second return value represents any global errors that occurred during validation.
+// If both return values are nil, the form was successfully validated.
+func Parse(r *http.Request, v interface{}, param interface{}) (map[string]error, error) {
 	vType := reflect.TypeOf(v)
 	if vType.Kind() != reflect.Ptr {
 		return nil, errPtrRequired
@@ -36,7 +36,7 @@ func Parse(r *http.Request, v interface{}) (map[string]error, error) {
 			fStrVal = r.Form.Get(fStruct.Name)
 		)
 		fmt.Sscanf(fStrVal, "%v", fVal.Addr().Interface())
-		if err := validate(vType, fStruct, vVal, fVal); err != nil {
+		if err := validate(vType, fStruct, vVal, fVal, param); err != nil {
 			fieldErrors[fStruct.Name] = err
 			continue
 		}
