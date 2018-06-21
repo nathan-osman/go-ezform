@@ -77,6 +77,16 @@ func (r RegistrationForm) ValidateCountry(v string) error {
 }
 ```
 
+#### IsURL
+
+The `IsURL` validator determines if the provided value is a valid URL:
+
+```go
+func (r RegistrationForm) ValidateWebsite(v string) error {
+    return ezform.IsURL(v)
+}
+```
+
 ### Passing Parameters
 
 Sometimes a validation method will need to access data from the scope invoking `Parse`. The third parameter to the function is used for this purpose:
