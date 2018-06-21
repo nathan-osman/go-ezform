@@ -14,22 +14,22 @@ var (
 )
 
 // validate checks for a Validate* method and invokes it if present.
-func validate(vType reflect.Type, sType reflect.StructField, vVal, fVal reflect.Value, params ...interface{}) error {
+func validate(vType reflect.Type, sType reflect.StructField, vVal, fVal reflect.Value, param interface{}) error {
 	mName := fmt.Sprintf("Validate%s", sType.Name)
 	m, found := vType.MethodByName(mName)
 	if !found {
 		return nil
 	}
-	mNumParams := 2 + len(params)
-	if m.Type.NumIn() != mNumParams || m.Type.In(1) != sType.Type {
+	hasParam := m.Type.NumIn() == 3
+	if (!hasParam && m.Type.NumIn() != 2) || m.Type.In(1) != sType.Type {
 		return errInvalidParameter
 	}
 	if m.Type.NumOut() != 1 || m.Type.Out(0) != errorInterface {
 		return errInvalidReturnType
 	}
 	mParams := []reflect.Value{fVal}
-	for _, p := range params {
-		mParams = append(mParams, reflect.ValueOf(p))
+	if hasParam {
+		mParams = append(mParams, reflect.ValueOf(param))
 	}
 	rVal := vVal.MethodByName(mName).Call(mParams)[0]
 	if rVal.IsNil() {
