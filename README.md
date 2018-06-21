@@ -85,11 +85,11 @@ Sometimes a validation method will need to access data from the scope invoking `
 ezform.Parse(r, f, dbConn)
 ```
 
-The validation methods may include an optional second parameter in their signature. This will be set to the value passed in `Parse`:
+The validation methods may include an optional second parameter in their signature. This parameter will be set to the value passed in `Parse`:
 
 ```go
 func (r RegistrationForm) ValidateName(v string, dbConn *db.Conn) error {
-    if !dbConn.isNameUnique {
+    if !dbConn.isNameUnique(v) {
         return errors.New("username is already in use")
     }
     return nil
