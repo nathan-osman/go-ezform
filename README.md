@@ -28,14 +28,14 @@ func (r RegistrationForm) ValidateName(v string) error {
 }
 ```
 
-Each validation function must conform to four requirements:
+Each validation method must conform to four requirements:
 
 - the name of the method must be `Validate[field]`
 - the method must use a value receiver
 - the method must accept a single parameter of the field's type
 - the method return type must be an `error`
 
-The example validator above ensures that `Name` has a non-zero value.
+The example validation method above ensures that `Name` has a non-zero value.
 
 The HTML for this form might resemble the following:
 
@@ -52,7 +52,7 @@ To parse and validate the form, use the following code in the handler:
 
 ```go
 f := &RegistrationForm{}
-fieldErrs, err := ezform.Parse(r, f)
+fieldErrs, err := ezform.Parse(r, f, nil)
 ```
 
 The first return value is a map of field names to errors that were encountered during validation. This map will be empty if no errors were encountered. The second return value will indicate any internal errors that were encountered during parsing.
@@ -76,3 +76,24 @@ func (r RegistrationForm) ValidateCountry(v string) error {
     return ezform.Contains(validCountries, v)
 }
 ```
+
+### Passing Parameters
+
+Sometimes a validation method will need to access data from the scope invoking `Parse`. The third parameter to the function is used for this purpose:
+
+```go
+ezform.Parse(r, f, dbConn)
+```
+
+The validation methods may include an optional second parameter in their signature. This will be set to the value passed in `Parse`:
+
+```go
+func (r RegistrationForm) ValidateName(v string, dbConn *db.Conn) error {
+    if !dbConn.isNameUnique {
+        return errors.New("username is already in use")
+    }
+    return nil
+}
+```
+
+If more than one parameter must be passed, a `struct` should be used.
