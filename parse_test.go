@@ -23,7 +23,7 @@ func (p parseTestForm) ValidateStringVal(v string) error {
 }
 
 var parseTestReference = &parseTestForm{
-	StringVal: "test",
+	StringVal: "test value\n",
 	IntVal:    42,
 	BoolVal:   true,
 	TimeVal:   time.Time{},

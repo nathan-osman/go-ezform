@@ -35,7 +35,12 @@ func Parse(r *http.Request, v interface{}, param interface{}) (map[string]error,
 			fVal    = vVal.Field(i)
 			fStrVal = r.Form.Get(fStruct.Name)
 		)
-		fmt.Sscanf(fStrVal, "%v", fVal.Addr().Interface())
+		switch fVal.Kind() {
+		case reflect.String:
+			fVal.SetString(fStrVal)
+		default:
+			fmt.Sscanf(fStrVal, "%v", fVal.Addr().Interface())
+		}
 		if err := validate(vType, fStruct, vVal, fVal, param); err != nil {
 			fieldErrors[fStruct.Name] = err
 			continue
