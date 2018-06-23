@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"time"
 )
 
 var (
@@ -38,6 +39,13 @@ func Parse(r *http.Request, v interface{}, param interface{}) (map[string]error,
 		switch fVal.Kind() {
 		case reflect.String:
 			fVal.SetString(fStrVal)
+		case reflect.Bool:
+			fVal.SetBool(len(fStrVal) != 0)
+		case reflect.Struct:
+			if fVal.Type() == reflect.TypeOf(time.Time{}) {
+				t, _ := time.Parse(time.RFC3339, fStrVal)
+				fVal.Set(reflect.ValueOf(t))
+			}
 		default:
 			fmt.Sscanf(fStrVal, "%v", fVal.Addr().Interface())
 		}

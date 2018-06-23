@@ -1,21 +1,31 @@
 package ezform
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
 )
 
+const (
+	strVal = "test value\n"
+	intVal = 42
+)
+
+var (
+	timeVal = time.Now()
+)
+
 type parseTestForm struct {
-	StringVal string
-	IntVal    int
-	BoolVal   bool
-	TimeVal   time.Time
+	StringVal    string
+	IntVal       int
+	BoolValTrue  bool
+	BoolValFalse bool
+	TimeVal      time.Time
 }
 
 func (p parseTestForm) ValidateStringVal(v string) error {
@@ -23,14 +33,20 @@ func (p parseTestForm) ValidateStringVal(v string) error {
 }
 
 var parseTestReference = &parseTestForm{
-	StringVal: "test value\n",
-	IntVal:    42,
-	BoolVal:   true,
-	TimeVal:   time.Time{},
-}
-
-func toURLVal(v interface{}) []string {
-	return []string{fmt.Sprintf("%v", v)}
+	StringVal:    strVal,
+	IntVal:       intVal,
+	BoolValTrue:  true,
+	BoolValFalse: false,
+	TimeVal: time.Date(
+		timeVal.Year(),
+		timeVal.Month(),
+		timeVal.Day(),
+		timeVal.Hour(),
+		timeVal.Minute(),
+		timeVal.Second(),
+		0,
+		timeVal.Location(),
+	),
 }
 
 func simulateRequest(v url.Values, f interface{}) (map[string]error, error) {
@@ -69,10 +85,10 @@ func TestMissingField(t *testing.T) {
 func TestStoreValues(t *testing.T) {
 	var (
 		v = url.Values{
-			"StringVal": toURLVal(parseTestReference.StringVal),
-			"IntVal":    toURLVal(parseTestReference.IntVal),
-			"BoolVal":   toURLVal(parseTestReference.BoolVal),
-			"TimeVal":   toURLVal(parseTestReference.TimeVal),
+			"StringVal":   []string{strVal},
+			"IntVal":      []string{strconv.Itoa(intVal)},
+			"BoolValTrue": []string{"on"},
+			"TimeVal":     []string{timeVal.Format(time.RFC3339)},
 		}
 		f = &parseTestForm{}
 	)
