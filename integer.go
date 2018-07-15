@@ -2,47 +2,63 @@ package ezform
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 )
 
 var (
-
 	// ErrInvalidInteger indicates that an invalid integer was supplied.
-	ErrInvalidInteger = errors.New("invalid integer specified")
-
-	// ErrIntegerTooSmall indicates that the provided value is too small.
-	ErrIntegerTooSmall = errors.New("integer is too small")
-
-	// ErrIntegerTooLarge indicates that the provided value is too large.
-	ErrIntegerTooLarge = errors.New("integer is too large")
+	ErrInvalidInteger = errors.New("value is not a valid integer")
 )
 
-// Integer represents a field that stores an integer value.
-type Integer int64
+// IntegerValidator defines an interface for integer validators.
+type IntegerValidator interface {
+	Validate(int64) error
+}
 
-func (i Integer) String() string {
-	return strconv.FormatInt(int64(i), 10)
+// Integer is a field that stores a 64-bit signed integer value.
+type Integer struct {
+	Value      int64
+	Validators []IntegerValidator
 }
 
 // Parse attempts to store the provided string as an integer.
-func (i *Integer) Parse(str string) error {
-	v, err := strconv.ParseInt(str, 10, 64)
-	*i = Integer(v)
-	return err
+func (i *Integer) Parse(value string) error {
+	v, err := strconv.ParseInt(value, 10, 64)
+	if err != nil {
+		return ErrInvalidInteger
+	}
+	i.Value = v
+	return nil
 }
 
-// MinValue verifies that the number is equal to or greater than the provided value.
-func (i Integer) MinValue(min int64) error {
-	if int64(i) < min {
-		return ErrIntegerTooSmall
+// Validate ensures that the provided value is valid.
+func (i Integer) Validate() error {
+	for _, v := range i.Validators {
+		if err := v.Validate(i.Value); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
-// MaxValue verifies that the number is less than or equal to the provided value.
-func (i Integer) MaxValue(max int64) error {
-	if int64(i) < max {
-		return ErrIntegerTooLarge
+// MinMaxValidator ensures that an integer falls within the specified range.
+type MinMaxValidator struct {
+
+	// Min is the lowest value that will be accepted.
+	Min int64
+
+	// Max is the highest value that will be accepted.
+	Max int64
+}
+
+// Validate ensures the integer falls within the range.
+func (m MinMaxValidator) Validate(value int64) error {
+	if value < m.Min {
+		return fmt.Errorf("value cannot be less than %d", m.Min)
+	}
+	if value > m.Max {
+		return fmt.Errorf("value cannot be greater than %d", m.Max)
 	}
 	return nil
 }

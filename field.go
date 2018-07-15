@@ -1,11 +1,11 @@
 package ezform
 
-// Field is the base interface for all of the supported form field types.
+// Field is the interface that all field types must implement.
 type Field interface {
 
-	// String obtains a string representation of the field's value.
-	String() string
-
-	// Parse attempts to load the provided string representation of the field.
+	// Parse attempts to store the provided string value in the field's native type.
 	Parse(string) error
+
+	// Validate ensures that the provided value is valid.
+	Validate() error
 }

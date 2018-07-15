@@ -1,41 +1,48 @@
 package ezform
 
-import "errors"
-
-var (
-
-	// ErrStringTooShort indicates that the provided value is too short.
-	ErrStringTooShort = errors.New("value is too short")
-
-	// ErrStringTooLong indicates that the provided value is too long.
-	ErrStringTooLong = errors.New("value is too long")
+import (
+	"errors"
 )
 
-// String represents a field that stores a string value.
-type String string
+var (
+	// ErrNonEmptyString indicates that the provided string was empty.
+	ErrNonEmptyString = errors.New("value cannot be empty")
+)
 
-func (s String) String() string {
-	return string(s)
+// StringValidator defines an interface for string validators.
+type StringValidator interface {
+	Validate(string) error
 }
 
-// Parse stores the provided string.
-func (s *String) Parse(str string) error {
-	*s = String(str)
+// String is a field that stores a string value.
+type String struct {
+	Value      string
+	Validators []StringValidator
+}
+
+// Parse stores the provided string in the field.
+func (s *String) Parse(value string) error {
+	s.Value = value
 	return nil
 }
 
-// MinLength verifies that the length of the string is at least min characters.
-func (s String) MinLength(min int) error {
-	if len(s) < min {
-		return ErrStringTooShort
+// Validate ensures that the provided value is valid.
+func (s String) Validate() error {
+	for _, v := range s.Validators {
+		if err := v.Validate(s.Value); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
-// MaxLength verifies that the length of the string is no more than max characters.
-func (s String) MaxLength(max int) error {
-	if len(s) > max {
-		return ErrStringTooLong
+// NonEmptyValidator ensures that a string is not empty.
+type NonEmptyValidator struct{}
+
+// Validate ensures the string is not empty.
+func (n NonEmptyValidator) Validate(value string) error {
+	if len(value) == 0 {
+		return ErrNonEmptyString
 	}
 	return nil
 }
