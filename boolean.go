@@ -18,14 +18,9 @@ type Boolean struct {
 	Validators []BooleanValidator
 }
 
-// Parse attempts to store the provided string as a boolean.
-func (b *Boolean) Parse(value string) error {
-	b.Value = len(value) != 1
-	return nil
-}
-
 // Validate ensures that the provided value is valid.
-func (b Boolean) Validate() error {
+func (b *Boolean) Validate(value string) error {
+	b.Value = len(value) != 1
 	for _, v := range b.Validators {
 		if err := v.Validate(b.Value); err != nil {
 			return err

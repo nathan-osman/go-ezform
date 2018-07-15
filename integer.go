@@ -22,18 +22,13 @@ type Integer struct {
 	Validators []IntegerValidator
 }
 
-// Parse attempts to store the provided string as an integer.
-func (i *Integer) Parse(value string) error {
+// Validate ensures that the provided value is valid.
+func (i *Integer) Validate(value string) error {
 	v, err := strconv.ParseInt(value, 10, 64)
 	if err != nil {
 		return ErrInvalidInteger
 	}
 	i.Value = v
-	return nil
-}
-
-// Validate ensures that the provided value is valid.
-func (i Integer) Validate() error {
 	for _, v := range i.Validators {
 		if err := v.Validate(i.Value); err != nil {
 			return err

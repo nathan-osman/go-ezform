@@ -20,19 +20,14 @@ type String struct {
 	Validators []StringValidator
 }
 
-// Parse stores the provided string in the field.
-func (s *String) Parse(value string) error {
-	s.Value = value
-	return nil
-}
-
 // Validate ensures that the provided value is valid.
-func (s String) Validate() error {
+func (s *String) Validate(value string) error {
 	for _, v := range s.Validators {
-		if err := v.Validate(s.Value); err != nil {
+		if err := v.Validate(value); err != nil {
 			return err
 		}
 	}
+	s.Value = value
 	return nil
 }
 
