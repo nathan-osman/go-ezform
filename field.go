@@ -2,64 +2,45 @@ package ezform
 
 import (
 	"errors"
-	"reflect"
+
+	"github.com/nathan-osman/go-reflectr"
 )
 
 var (
-	errorInterface = reflect.TypeOf((*error)(nil)).Elem()
-
-	errValidatorStruct = errors.New("validator must be a struct or pointer")
-	errValidatorMethod = errors.New("validator must have a Validate method")
-	errValidatorParams = errors.New("validator must accept a single parameter")
-	errValidatorReturn = errors.New("validator must return an error")
+	errValidator = errors.New("unable to use the validator on the field")
 )
 
-// Parser defines an interface that all fields must implement for parsing field values as strings and converting them to the appropriate type.
-type Parser interface {
-	Parse(string) error
-	Value() interface{}
-}
-
-// Field represents a single form field.
-// All field types should include this type as an anonymous member.
+// Field is designed to be used as a base for all field types. It provides the Validate and Error methods needed for compatibility with Validate.
 type Field struct {
-	Validators []interface{}
-	Error      error
+	validators []interface{}
+	err        error
 }
 
 // Validate uses each validator specified for the field to ensure that the field contains a valid value.
 func (f Field) Validate(value interface{}) error {
-	var (
-		valueType = reflect.TypeOf(value)
-		valueVal  = reflect.ValueOf(value)
-	)
-	for _, v := range f.Validators {
-		var (
-			vType = reflect.TypeOf(v)
-			vVal  = reflect.ValueOf(v)
-		)
-		if vType.Kind() == reflect.Ptr {
-			vType = vType.Elem()
-			vVal = vVal.Elem()
+	for _, v := range f.validators {
+		r, err := reflectr.
+			Struct(v).
+			Method("Validate").
+			Returns(reflectr.ErrorType).
+			Call(value)
+		if err != nil {
+			return errValidator
 		}
-		if vType.Kind() != reflect.Struct {
-			return errValidatorStruct
-		}
-		m, found := vType.MethodByName("Validate")
-		if !found {
-			return errValidatorMethod
-		}
-		if m.Type.NumIn() != 2 || m.Type.In(1) != valueType {
-			return errValidatorParams
-		}
-		if m.Type.NumOut() != 1 || m.Type.Out(0) != errorInterface {
-			return errValidatorReturn
-		}
-		rVal := vVal.MethodByName("Validate").Call([]reflect.Value{
-			valueVal,
-		})[0]
-		if !rVal.IsNil() {
-			return rVal.Interface().(error)
+		err = r[0].(error)
+		if err != nil {
+			f.err = err
 		}
 	}
+	return nil
+}
+
+// Error returns the error for the field (if any).
+func (f Field) Error() error {
+	return f.err
+}
+
+// SetError sets the error for the field.
+func (f *Field) SetError(err error) {
+	f.err = err
 }

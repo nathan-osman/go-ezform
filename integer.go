@@ -26,6 +26,6 @@ func (i *Integer) Parse(value string) error {
 }
 
 // Value retrieves the current value of the field.
-func (i Integer) Value() interface{} {
+func (i Integer) Value() int64 {
 	return i.value
 }

@@ -13,6 +13,6 @@ func (s *String) Parse(value string) error {
 }
 
 // Value retrieves the current value of the field.
-func (s String) Value() interface{} {
+func (s String) Value() string {
 	return s.value
 }

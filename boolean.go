@@ -13,6 +13,6 @@ func (b *Boolean) Parse(value string) error {
 }
 
 // Value retrieves the current value of the field.
-func (b Boolean) Value() interface{} {
+func (b Boolean) Value() bool {
 	return b.value
 }

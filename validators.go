@@ -10,11 +10,6 @@ var (
 	errRequired       = errors.New("this field is required")
 )
 
-// Validator defines an interface for writing field validators.
-type Validator interface {
-	Validate(interface{}) error
-}
-
 // NonEmptyValidator ensures that a string value has a length greater than one.
 type NonEmptyValidator struct{}
 
