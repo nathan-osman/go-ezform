@@ -1,6 +1,7 @@
 package ezform
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -37,7 +38,7 @@ func simulateRequest(params url.Values, v interface{}) (bool, error) {
 	return Validate(r, v)
 }
 
-func TestBadStruct(t *testing.T) {
+func TestValidateBadStruct(t *testing.T) {
 	if _, err := simulateRequest(nil, validateTestForm{}); err != errInvalidForm {
 		t.Fatalf("%v != %v", err, errInvalidForm)
 	}
@@ -58,8 +59,8 @@ func TestValidate(t *testing.T) {
 	ok, err := simulateRequest(
 		url.Values{
 			"StringVal":  []string{stringVal},
-			"IntegerVal": []string{"-42"},
-			"BooleanVal": []string{"true"},
+			"IntegerVal": []string{fmt.Sprintf("%v", integerVal)},
+			"BooleanVal": []string{fmt.Sprintf("%v", booleanVal)},
 		},
 		f,
 	)

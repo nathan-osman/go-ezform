@@ -76,8 +76,10 @@ func Validate(r *http.Request, v interface{}) (bool, error) {
 			return false, err
 		}
 		if e != nil {
+			if _, err := s.Method("SetError").Call(e); err != nil {
+				return false, err
+			}
 			validated = false
-			s.Method("SetError").Call(e)
 		}
 	}
 	return validated, nil
