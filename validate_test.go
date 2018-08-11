@@ -1,89 +1,95 @@
 package ezform
 
 import (
-	"errors"
-	"reflect"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"strings"
 	"testing"
 )
 
 const (
-	strValidParam   = "valid"
-	strInvalidParam = "invalid"
+	stringVal  = "a b\nc"
+	integerVal = -42
+	booleanVal = true
 )
 
-var (
-	errField2 = errors.New("Field2 is invalid")
-	errField5 = errors.New("Field5 is invalid")
-)
-
-type validateTestForm struct {
-	Field1, Field2, Field3, Field4, Field5 string
-}
-
-func (v validateTestForm) ValidateField2(s string) error {
-	if len(s) == 0 {
-		return errField2
-	}
-	return nil
-}
-
-func (v validateTestForm) ValidateField3(i int) error { return nil }
-func (v validateTestForm) ValidateField4(s string)    {}
-func (v validateTestForm) ValidateField5(s, p string) error {
-	if p != strValidParam {
-		return errField5
-	}
-	return nil
-}
-
-func validateField(v interface{}, fieldName string, param interface{}) error {
-	var (
-		vType    = reflect.TypeOf(v)
-		sType, _ = vType.FieldByName(fieldName)
-		vVal     = reflect.ValueOf(v)
-		fVal     = vVal.FieldByName(fieldName)
+func simulateRequest(params url.Values, v interface{}) (bool, error) {
+	r := httptest.NewRequest(
+		http.MethodPost,
+		"/",
+		strings.NewReader(params.Encode()),
 	)
-	return validate(vType, sType, vVal, fVal, param)
+	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	if err := r.ParseForm(); err != nil {
+		return false, err
+	}
+	return Validate(r, v)
 }
 
-func TestValidateNoValidator(t *testing.T) {
-	if err := validateField(validateTestForm{}, "Field1", nil); err != nil {
-		t.Fatalf("%s != nil", err)
+type testValidateBadStructForm struct{}
+
+func TestValidateBadStruct(t *testing.T) {
+	if _, err := simulateRequest(nil, testValidateBadStructForm{}); err != errInvalidForm {
+		t.Fatalf("%v != %v", err, errInvalidForm)
+	}
+	var str string
+	if _, err := simulateRequest(nil, &str); err == nil {
+		t.Fatal("error expected")
 	}
 }
 
-func TestValidateValidValue(t *testing.T) {
-	if err := validateField(validateTestForm{Field2: "test"}, "Field2", nil); err != nil {
-		t.Fatalf("%s != nil", err)
+type testValidateBadFieldForm1 struct {
+	InvalidField string
+}
+
+type testValidateBadFieldForm2 struct {
+	InvalidField StringField
+}
+
+func TestValidateBadField(t *testing.T) {
+	if _, err := simulateRequest(nil, &testValidateBadFieldForm1{}); err == nil {
+		t.Fatal("error expected")
+	}
+	if _, err := simulateRequest(nil, &testValidateBadFieldForm2{}); err != errInvalidField {
+		t.Fatalf("%v != %v", err, errInvalidField)
 	}
 }
 
-func TestValidateInvalidValue(t *testing.T) {
-	if err := validateField(validateTestForm{}, "Field2", nil); err != errField2 {
-		t.Fatalf("%s != %s", err, errField2)
-	}
+type testValidateForm struct {
+	StringVal  *StringField
+	IntegerVal *IntegerField
+	BooleanVal *BooleanField
 }
 
-func TestValidateInvalidParameter(t *testing.T) {
-	if err := validateField(validateTestForm{}, "Field3", nil); err != errInvalidParameter {
-		t.Fatalf("%s != %s", err, errInvalidParameter)
+func TestValidate(t *testing.T) {
+	f := &testValidateForm{
+		StringVal:  NewStringField(),
+		IntegerVal: NewIntegerField(),
+		BooleanVal: NewBooleanField(),
 	}
-}
-
-func TestValidateInvalidReturnType(t *testing.T) {
-	if err := validateField(validateTestForm{}, "Field4", nil); err != errInvalidReturnType {
-		t.Fatalf("%s != %s", err, errInvalidReturnType)
+	ok, err := simulateRequest(
+		url.Values{
+			"StringVal":  []string{stringVal},
+			"IntegerVal": []string{fmt.Sprintf("%v", integerVal)},
+			"BooleanVal": []string{fmt.Sprintf("%v", booleanVal)},
+		},
+		f,
+	)
+	if err != nil {
+		t.Fatal(err)
 	}
-}
-
-func TestValidateValidParam(t *testing.T) {
-	if err := validateField(validateTestForm{}, "Field5", strValidParam); err != nil {
-		t.Fatalf("%s != nil", err)
+	if !ok {
+		t.Fatal("validation failed")
 	}
-}
-
-func TestValidateInvalidParam(t *testing.T) {
-	if err := validateField(validateTestForm{}, "Field5", strInvalidParam); err != errField5 {
-		t.Fatalf("%s != %s", err, errField5)
+	if f.StringVal.Value() != stringVal {
+		t.Fatalf("%v != %v", f.StringVal.Value(), stringVal)
+	}
+	if f.IntegerVal.Value() != integerVal {
+		t.Fatalf("%v != %v", f.IntegerVal.Value(), integerVal)
+	}
+	if f.BooleanVal.Value() != booleanVal {
+		t.Fatalf("%v != %v", f.BooleanVal.Value(), booleanVal)
 	}
 }

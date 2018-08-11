@@ -2,38 +2,105 @@ package ezform
 
 import (
 	"errors"
-	"fmt"
-	"reflect"
+	"net/http"
+
+	"github.com/nathan-osman/go-reflectr"
 )
 
 var (
-	errorInterface = reflect.TypeOf((*error)(nil)).Elem()
+	errInvalidForm = errors.New("form must be a pointer to struct")
 
-	errInvalidParameter  = errors.New("validation method must accept a single parameter of the field's type")
-	errInvalidReturnType = errors.New("validation method must return an error")
+	errInvalidField    = errors.New("field must be a pointer to struct")
+	errParseFieldValue = errors.New("unable to parse form value")
+	errGetFieldValue   = errors.New("unable to get field value")
+	errRunValidator    = errors.New("unable to run validator")
 )
 
-// validate checks for a Validate* method and invokes it if present.
-func validate(vType reflect.Type, sType reflect.StructField, vVal, fVal reflect.Value, param interface{}) error {
-	mName := fmt.Sprintf("Validate%s", sType.Name)
-	m, found := vType.MethodByName(mName)
-	if !found {
+func returnToError(v interface{}) error {
+	if v == nil {
 		return nil
 	}
-	hasParam := m.Type.NumIn() == 3
-	if (!hasParam && m.Type.NumIn() != 2) || m.Type.In(1) != sType.Type {
-		return errInvalidParameter
+	return v.(error)
+}
+
+func parseFieldValue(field *reflectr.StructMeta, fieldValue string) error {
+	r, err := field.
+		Method("Parse").
+		Returns(reflectr.ErrorType).
+		Call(fieldValue)
+	if err != nil {
+		return errParseFieldValue
 	}
-	if m.Type.NumOut() != 1 || m.Type.Out(0) != errorInterface {
-		return errInvalidReturnType
+	return returnToError(r[0])
+}
+
+func getFieldValue(field *reflectr.StructMeta) (interface{}, error) {
+	r, err := field.Method("Value").Call()
+	if err != nil {
+		return nil, errGetFieldValue
 	}
-	mParams := []reflect.Value{fVal}
-	if hasParam {
-		mParams = append(mParams, reflect.ValueOf(param))
+	if len(r) != 1 {
+		return nil, errGetFieldValue
 	}
-	rVal := vVal.MethodByName(mName).Call(mParams)[0]
-	if rVal.IsNil() {
-		return nil
+	return r[0], nil
+}
+
+func runValidator(validator interface{}, v interface{}) (error, error) {
+	r, err := reflectr.
+		Struct(validator).
+		Method("Validate").
+		Returns(reflectr.ErrorType).
+		Call(v)
+	if err != nil {
+		return nil, errRunValidator
 	}
-	return rVal.Interface().(error)
+	if len(r) != 1 {
+		return nil, errRunValidator
+	}
+	return returnToError(r[0]), nil
+}
+
+// Validate parses request data and validates it against the provided form.
+func Validate(r *http.Request, v interface{}) (bool, error) {
+	s := reflectr.Struct(v)
+	if !s.IsPtr() {
+		return false, errInvalidForm
+	}
+	if err := s.Error(); err != nil {
+		return false, errInvalidForm
+	}
+	validated := true
+	for _, fieldName := range s.Fields() {
+		var (
+			f, _       = s.Field(fieldName).Value()
+			field      = reflectr.Struct(f)
+			fieldValue = r.Form.Get(fieldName)
+		)
+		if !field.IsPtr() {
+			return false, errInvalidField
+		}
+		if err := parseFieldValue(field, fieldValue); err != nil {
+			return false, err
+		}
+		v, err := getFieldValue(field)
+		if err != nil {
+			return false, err
+		}
+		i, err := field.Field("Field").Type(Field{}).Addr()
+		if err != nil {
+			return false, err
+		}
+		fieldField := i.(*Field)
+		for _, validator := range fieldField.Validators {
+			e, err := runValidator(validator, v)
+			if err != nil {
+				return false, err
+			}
+			if e != nil {
+				fieldField.Error = e
+				validated = false
+			}
+		}
+	}
+	return validated, nil
 }
