@@ -8,7 +8,9 @@ import (
 )
 
 var (
-	errInvalidForm     = errors.New("form must be a pointer to struct")
+	errInvalidForm = errors.New("form must be a pointer to struct")
+
+	errInvalidField    = errors.New("field must be a pointer to struct")
 	errParseFieldValue = errors.New("unable to parse form value")
 	errGetFieldValue   = errors.New("unable to get field value")
 	errRunValidator    = errors.New("unable to run validator")
@@ -69,14 +71,14 @@ func Validate(r *http.Request, v interface{}) (bool, error) {
 	}
 	validated := true
 	for _, fieldName := range s.Fields() {
-		f, err := s.Field(fieldName).Value()
-		if err != nil {
-			return false, err
-		}
 		var (
+			f, _       = s.Field(fieldName).Value()
 			field      = reflectr.Struct(f)
 			fieldValue = r.Form.Get(fieldName)
 		)
+		if !field.IsPtr() {
+			return false, errInvalidField
+		}
 		if err := parseFieldValue(field, fieldValue); err != nil {
 			return false, err
 		}

@@ -15,16 +15,6 @@ const (
 	booleanVal = true
 )
 
-type validateTestForm struct {
-	StringVal  *StringField
-	IntegerVal *IntegerField
-	BooleanVal *BooleanField
-}
-
-type ValidateTestFormBadField struct {
-	InvalidField string
-}
-
 func simulateRequest(params url.Values, v interface{}) (bool, error) {
 	r := httptest.NewRequest(
 		http.MethodPost,
@@ -38,8 +28,10 @@ func simulateRequest(params url.Values, v interface{}) (bool, error) {
 	return Validate(r, v)
 }
 
+type testValidateBadStructForm struct{}
+
 func TestValidateBadStruct(t *testing.T) {
-	if _, err := simulateRequest(nil, validateTestForm{}); err != errInvalidForm {
+	if _, err := simulateRequest(nil, testValidateBadStructForm{}); err != errInvalidForm {
 		t.Fatalf("%v != %v", err, errInvalidForm)
 	}
 	var str string
@@ -48,14 +40,31 @@ func TestValidateBadStruct(t *testing.T) {
 	}
 }
 
+type testValidateBadFieldForm1 struct {
+	InvalidField string
+}
+
+type testValidateBadFieldForm2 struct {
+	InvalidField StringField
+}
+
 func TestValidateBadField(t *testing.T) {
-	if _, err := simulateRequest(nil, &ValidateTestFormBadField{}); err == nil {
+	if _, err := simulateRequest(nil, &testValidateBadFieldForm1{}); err == nil {
 		t.Fatal("error expected")
+	}
+	if _, err := simulateRequest(nil, &testValidateBadFieldForm2{}); err != errInvalidField {
+		t.Fatalf("%v != %v", err, errInvalidField)
 	}
 }
 
+type testValidateForm struct {
+	StringVal  *StringField
+	IntegerVal *IntegerField
+	BooleanVal *BooleanField
+}
+
 func TestValidate(t *testing.T) {
-	f := &validateTestForm{
+	f := &testValidateForm{
 		StringVal:  NewStringField(),
 		IntegerVal: NewIntegerField(),
 		BooleanVal: NewBooleanField(),

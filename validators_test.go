@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-type nonEmptyValidatorForm struct {
+type testNonEmptyValidatorForm struct {
 	Field *StringField
 }
 
@@ -20,7 +20,7 @@ func TestNonEmptyValidator(t *testing.T) {
 	} {
 		var (
 			u = url.Values{"Field": []string{test.Input}}
-			f = &nonEmptyValidatorForm{
+			f = &testNonEmptyValidatorForm{
 				Field: NewStringField(&NonEmptyValidator{}),
 			}
 		)
@@ -34,7 +34,7 @@ func TestNonEmptyValidator(t *testing.T) {
 	}
 }
 
-type minMaxValidatorForm struct {
+type testMinMaxValidatorForm struct {
 	Field *IntegerField
 }
 
@@ -51,7 +51,7 @@ func TestMinMaxValidator(t *testing.T) {
 	} {
 		var (
 			u = url.Values{"Field": []string{fmt.Sprintf("%v", test.Input)}}
-			f = &minMaxValidatorForm{
+			f = &testMinMaxValidatorForm{
 				Field: NewIntegerField(&MinMaxValidator{Min: -1, Max: 1}),
 			}
 		)
@@ -65,7 +65,7 @@ func TestMinMaxValidator(t *testing.T) {
 	}
 }
 
-type requiredValidatorForm struct {
+type testRequiredValidatorForm struct {
 	Field *BooleanField
 }
 
@@ -79,7 +79,7 @@ func TestRequiredValidator(t *testing.T) {
 	} {
 		var (
 			u = url.Values{"Field": []string{test.Input}}
-			f = &requiredValidatorForm{
+			f = &testRequiredValidatorForm{
 				Field: NewBooleanField(&RequiredValidator{}),
 			}
 		)
