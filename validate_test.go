@@ -16,9 +16,9 @@ const (
 )
 
 type validateTestForm struct {
-	StringVal  String
-	IntegerVal Integer
-	BooleanVal Boolean
+	StringVal  *StringField
+	IntegerVal *IntegerField
+	BooleanVal *BooleanField
 }
 
 type ValidateTestFormBadField struct {
@@ -55,7 +55,11 @@ func TestValidateBadField(t *testing.T) {
 }
 
 func TestValidate(t *testing.T) {
-	f := &validateTestForm{}
+	f := &validateTestForm{
+		StringVal:  NewStringField(),
+		IntegerVal: NewIntegerField(),
+		BooleanVal: NewBooleanField(),
+	}
 	ok, err := simulateRequest(
 		url.Values{
 			"StringVal":  []string{stringVal},

@@ -3,14 +3,15 @@ package ezform
 import (
 	"errors"
 	"net/http"
-	"reflect"
 
 	"github.com/nathan-osman/go-reflectr"
 )
 
 var (
-	errInvalidForm   = errors.New("form must be a pointer to struct")
-	errInvalidReturn = errors.New("Validate() must return a single value")
+	errInvalidForm     = errors.New("form must be a pointer to struct")
+	errParseFieldValue = errors.New("unable to parse form value")
+	errGetFieldValue   = errors.New("unable to get field value")
+	errRunValidator    = errors.New("unable to run validator")
 )
 
 func returnToError(v interface{}) error {
@@ -20,66 +21,83 @@ func returnToError(v interface{}) error {
 	return v.(error)
 }
 
-func parseField(s *reflectr.StructMeta, formValue string) error {
-	r, err := s.
+func parseFieldValue(field *reflectr.StructMeta, fieldValue string) error {
+	r, err := field.
 		Method("Parse").
 		Returns(reflectr.ErrorType).
-		Call(formValue)
+		Call(fieldValue)
 	if err != nil {
-		return err
+		return errParseFieldValue
 	}
 	return returnToError(r[0])
 }
 
-func validateField(s *reflectr.StructMeta, v interface{}) (error, error) {
-	r, err := s.
+func getFieldValue(field *reflectr.StructMeta) (interface{}, error) {
+	r, err := field.Method("Value").Call()
+	if err != nil {
+		return nil, errGetFieldValue
+	}
+	if len(r) != 1 {
+		return nil, errGetFieldValue
+	}
+	return r[0], nil
+}
+
+func runValidator(validator interface{}, v interface{}) (error, error) {
+	r, err := reflectr.
+		Struct(validator).
 		Method("Validate").
 		Returns(reflectr.ErrorType).
 		Call(v)
 	if err != nil {
-		return nil, err
+		return nil, errRunValidator
+	}
+	if len(r) != 1 {
+		return nil, errRunValidator
 	}
 	return returnToError(r[0]), nil
 }
 
 // Validate parses request data and validates it against the provided form.
 func Validate(r *http.Request, v interface{}) (bool, error) {
-	vType := reflect.TypeOf(v)
-	if vType.Kind() != reflect.Ptr {
+	s := reflectr.Struct(v)
+	if !s.IsPtr() {
 		return false, errInvalidForm
 	}
-	vType = vType.Elem()
-	if vType.Kind() != reflect.Struct {
+	if err := s.Error(); err != nil {
 		return false, errInvalidForm
 	}
-	var (
-		vValue    = reflect.ValueOf(v).Elem()
-		validated = true
-	)
-	for i := 0; i < vType.NumField(); i++ {
+	validated := true
+	for _, fieldName := range s.Fields() {
+		f, err := s.Field(fieldName).Value()
+		if err != nil {
+			return false, err
+		}
 		var (
-			fValue = vValue.Field(i).Addr()
-			s      = reflectr.Struct(fValue.Interface())
+			field      = reflectr.Struct(f)
+			fieldValue = r.Form.Get(fieldName)
 		)
-		if err := parseField(s, r.Form.Get(vType.Field(i).Name)); err != nil {
+		if err := parseFieldValue(field, fieldValue); err != nil {
 			return false, err
 		}
-		r, err := s.Method("Value").Call()
+		v, err := getFieldValue(field)
 		if err != nil {
 			return false, err
 		}
-		if len(r) != 1 {
-			return false, errInvalidReturn
-		}
-		e, err := validateField(s, r[0])
+		i, err := field.Field("Field").Type(Field{}).Addr()
 		if err != nil {
 			return false, err
 		}
-		if e != nil {
-			if _, err := s.Method("SetError").Call(e); err != nil {
+		fieldField := i.(*Field)
+		for _, validator := range fieldField.Validators {
+			e, err := runValidator(validator, v)
+			if err != nil {
 				return false, err
 			}
-			validated = false
+			if e != nil {
+				fieldField.Error = e
+				validated = false
+			}
 		}
 	}
 	return validated, nil
