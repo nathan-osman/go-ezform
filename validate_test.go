@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+
+	"github.com/nathan-osman/go-ezform/fields"
 )
 
 const (
@@ -28,46 +30,17 @@ func simulateRequest(params url.Values, v interface{}) (bool, error) {
 	return Validate(r, v)
 }
 
-type testValidateBadStructForm struct{}
-
-func TestValidateBadStruct(t *testing.T) {
-	if _, err := simulateRequest(nil, testValidateBadStructForm{}); err != errInvalidForm {
-		t.Fatalf("%v != %v", err, errInvalidForm)
-	}
-	var str string
-	if _, err := simulateRequest(nil, &str); err == nil {
-		t.Fatal("error expected")
-	}
-}
-
-type testValidateBadFieldForm1 struct {
-	InvalidField string
-}
-
-type testValidateBadFieldForm2 struct {
-	InvalidField StringField
-}
-
-func TestValidateBadField(t *testing.T) {
-	if _, err := simulateRequest(nil, &testValidateBadFieldForm1{}); err == nil {
-		t.Fatal("error expected")
-	}
-	if _, err := simulateRequest(nil, &testValidateBadFieldForm2{}); err != errInvalidField {
-		t.Fatalf("%v != %v", err, errInvalidField)
-	}
-}
-
 type testValidateForm struct {
-	StringVal  *StringField
-	IntegerVal *IntegerField
-	BooleanVal *BooleanField
+	StringVal  *fields.String
+	IntegerVal *fields.Integer
+	BooleanVal *fields.Boolean
 }
 
 func TestValidate(t *testing.T) {
 	f := &testValidateForm{
-		StringVal:  NewStringField(),
-		IntegerVal: NewIntegerField(),
-		BooleanVal: NewBooleanField(),
+		StringVal:  fields.NewString(),
+		IntegerVal: fields.NewInteger(),
+		BooleanVal: fields.NewBoolean(),
 	}
 	ok, err := simulateRequest(
 		url.Values{
