@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestChoiceValidator(t *testing.T) {
+func TestChoice(t *testing.T) {
 	for _, test := range []struct {
 		Choices interface{}
 		Input   interface{}
