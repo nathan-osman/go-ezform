@@ -12,12 +12,12 @@ import (
 )
 
 const (
-	stringVal  = "a b\nc"
-	integerVal = -42
-	booleanVal = true
+	strVal  = "a b\n"
+	intVal  = 42
+	boolVal = true
 )
 
-func simulateRequest(params url.Values, v interface{}) (bool, error) {
+func createRequest(params url.Values) (*http.Request, error) {
 	r := httptest.NewRequest(
 		http.MethodPost,
 		"/",
@@ -25,44 +25,56 @@ func simulateRequest(params url.Values, v interface{}) (bool, error) {
 	)
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	if err := r.ParseForm(); err != nil {
-		return false, err
+		return nil, err
 	}
-	return Validate(r, v)
+	return r, nil
+}
+
+type testBadValidateForm struct{}
+
+func TestBadValidate(t *testing.T) {
+	if _, err := Validate(nil, new(string)); err != errInvalidForm {
+		t.Fatalf("%v != %v", err, errInvalidForm)
+	}
+	if _, err := Validate(nil, testBadValidateForm{}); err != errInvalidForm {
+		t.Fatalf("%v != %v", err, errInvalidForm)
+	}
 }
 
 type testValidateForm struct {
-	StringVal  *fields.String
-	IntegerVal *fields.Integer
-	BooleanVal *fields.Boolean
+	StrField  *fields.String
+	IntField  *fields.Integer
+	BoolField *fields.Boolean
 }
 
 func TestValidate(t *testing.T) {
 	f := &testValidateForm{
-		StringVal:  fields.NewString(),
-		IntegerVal: fields.NewInteger(),
-		BooleanVal: fields.NewBoolean(),
+		StrField:  fields.NewString(),
+		IntField:  fields.NewInteger(),
+		BoolField: fields.NewBoolean(),
 	}
-	ok, err := simulateRequest(
-		url.Values{
-			"StringVal":  []string{stringVal},
-			"IntegerVal": []string{fmt.Sprintf("%v", integerVal)},
-			"BooleanVal": []string{fmt.Sprintf("%v", booleanVal)},
-		},
-		f,
-	)
+	r, err := createRequest(url.Values{
+		"StrField":  []string{strVal},
+		"IntField":  []string{fmt.Sprintf("%v", intVal)},
+		"BoolField": []string{fmt.Sprintf("%v", boolVal)},
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !ok {
-		t.Fatal("validation failed")
+	v, err := Validate(r, f)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if f.StringVal.Value() != stringVal {
-		t.Fatalf("%v != %v", f.StringVal.Value(), stringVal)
+	if !v {
+		t.Fatal("validation unexpectedly failed")
 	}
-	if f.IntegerVal.Value() != integerVal {
-		t.Fatalf("%v != %v", f.IntegerVal.Value(), integerVal)
+	if f.StrField.Value() != strVal {
+		t.Fatalf("%v != %v", f.StrField.Value(), strVal)
 	}
-	if f.BooleanVal.Value() != booleanVal {
-		t.Fatalf("%v != %v", f.BooleanVal.Value(), booleanVal)
+	if f.IntField.Value() != intVal {
+		t.Fatalf("%v != %v", f.IntField.Value(), intVal)
+	}
+	if f.BoolField.Value() != boolVal {
+		t.Fatalf("%v != %v", f.BoolField.Value(), boolVal)
 	}
 }

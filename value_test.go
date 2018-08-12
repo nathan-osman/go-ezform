@@ -6,8 +6,6 @@ import (
 	"github.com/nathan-osman/go-reflectr"
 )
 
-const strVal = "test"
-
 type testBadValueField1 struct{}
 
 type testBadValueField2 struct{}
