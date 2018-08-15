@@ -15,6 +15,7 @@ var (
 )
 
 // Validate parses request data and validates it against the provided form.
+// The return value is set to ErrInvalid if the form fails validation.
 func Validate(r *http.Request, v interface{}) error {
 	s := reflectr.Struct(v)
 	if !s.IsPtr() {
