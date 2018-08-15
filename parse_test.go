@@ -1,25 +1,37 @@
 package ezform
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/nathan-osman/go-ezform/fields"
-
 	"github.com/nathan-osman/go-reflectr"
 )
 
-type testBadParseField struct{}
+var errParseBadValue = errors.New("test")
 
-func TestBadParse(t *testing.T) {
-	s := reflectr.Struct(&testBadParseField{})
-	if err := parse(s, ""); err != errParseFieldValue {
-		t.Fatalf("%v != %v", err, errParseFieldValue)
-	}
-}
+type testParseBadField struct{}
+
+type testParseBadValueField struct{}
+
+func (t *testParseBadValueField) Parse(v string) error { return errParseBadValue }
 
 func TestParse(t *testing.T) {
-	s := reflectr.Struct(fields.NewString())
-	if err := parse(s, ""); err != nil {
-		t.Fatal(err)
+	for _, test := range []struct {
+		Field      interface{}
+		ParseError error
+		Error      error
+	}{
+		{Field: &testParseBadField{}, Error: errParseFieldValue},
+		{Field: &testParseBadValueField{}, ParseError: errParseBadValue},
+		{Field: fields.NewString()},
+	} {
+		e, err := parse(reflectr.Struct(test.Field), "")
+		if err != test.Error {
+			t.Fatalf("%v != %v", err, test.Error)
+		}
+		if e != test.ParseError {
+			t.Fatalf("%v != %v", e, test.ParseError)
+		}
 	}
 }

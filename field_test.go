@@ -9,16 +9,13 @@ import (
 	"github.com/nathan-osman/go-reflectr"
 )
 
-type testFieldMissingParse struct{}
-
-type testFieldMissingValue struct{}
-
-func (t *testFieldMissingValue) Parse(string) error { return nil }
-
 type testFieldMissingField struct{}
 
-func (t *testFieldMissingField) Parse(string) error { return nil }
-func (t *testFieldMissingField) Value() interface{} { return nil }
+type testFieldMissingParse struct{ fields.Field }
+
+type testFieldMissingValue struct{ fields.Field }
+
+func (t *testFieldMissingValue) Parse(string) error { return nil }
 
 type testFieldBadValidator struct{}
 
@@ -29,11 +26,11 @@ func TestField(t *testing.T) {
 		Error      error
 	}{
 		{F: struct{}{}, Error: errInvalidField},
+		{F: &testFieldMissingField{}, Error: reflectr.ErrFieldDoesNotExist},
 		{F: &testFieldMissingParse{}, Error: errParseFieldValue},
 		{F: &testFieldMissingValue{}, Error: errGetFieldValue},
-		{F: &testFieldMissingField{}, Error: reflectr.ErrFieldDoesNotExist},
 		{F: fields.NewString(&testFieldBadValidator{}), Error: errRunValidator},
-		{F: fields.NewString(&validators.NonEmpty{}), Error: errFieldValidationFailed},
+		{F: fields.NewString(&validators.NonEmpty{}), Error: errInvalidValue},
 		{F: fields.NewString(&validators.NonEmpty{}), FieldValue: "a"},
 	} {
 		if err := field(test.F, test.FieldValue); err != test.Error {
