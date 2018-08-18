@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestBoolean(t *testing.T) {
+func TestNewBoolean(t *testing.T) {
 	for _, test := range []struct {
 		Input  string
 		Output bool
@@ -19,5 +19,12 @@ func TestBoolean(t *testing.T) {
 		if f.Value() != test.Output {
 			t.Fatalf("%v != %v", f.Value(), test.Output)
 		}
+	}
+}
+
+func TestNewBooleanWithDefault(t *testing.T) {
+	f := NewBooleanWithDefault(true)
+	if f.Value() != true {
+		t.Fatalf("%v != %v", f.Value(), true)
 	}
 }

@@ -4,7 +4,9 @@ import (
 	"testing"
 )
 
-func TestInteger(t *testing.T) {
+const intVal = 42
+
+func TestNewInteger(t *testing.T) {
 	for _, test := range []struct {
 		Input  string
 		Output int64
@@ -20,5 +22,12 @@ func TestInteger(t *testing.T) {
 		if f.Value() != test.Output {
 			t.Fatalf("%v != %v", f.Value(), strVal)
 		}
+	}
+}
+
+func TestNewIntegerWithDefault(t *testing.T) {
+	f := NewIntegerWithDefault(intVal)
+	if f.Value() != intVal {
+		t.Fatalf("%v != %v", f.Value(), intVal)
 	}
 }

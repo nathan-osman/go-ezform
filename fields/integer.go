@@ -24,6 +24,16 @@ func NewInteger(validators ...interface{}) *Integer {
 	}
 }
 
+// NewIntegerWithDefault creates a new integer field with the specified default value and validators.
+func NewIntegerWithDefault(value int64, validators ...interface{}) *Integer {
+	return &Integer{
+		Field: Field{
+			Validators: validators,
+		},
+		value: value,
+	}
+}
+
 // Parse ensures that the provided value is valid.
 func (i *Integer) Parse(value string) error {
 	v, err := strconv.ParseInt(value, 10, 64)

@@ -15,6 +15,16 @@ func NewString(validators ...interface{}) *String {
 	}
 }
 
+// NewStringWithDefault creates a new string field with the specified default value and validators.
+func NewStringWithDefault(value string, validators ...interface{}) *String {
+	return &String{
+		Field: Field{
+			Validators: validators,
+		},
+		value: value,
+	}
+}
+
 // Parse ensures that the provided value is valid.
 func (s *String) Parse(value string) error {
 	s.value = value
