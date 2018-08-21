@@ -25,8 +25,9 @@ func TestNewInteger(t *testing.T) {
 	}
 }
 
-func TestNewIntegerWithDefault(t *testing.T) {
-	f := NewIntegerWithDefault(intVal)
+func TestIntegerSetValue(t *testing.T) {
+	f := NewInteger()
+	f.SetValue(intVal)
 	if f.Value() != intVal {
 		t.Fatalf("%v != %v", f.Value(), intVal)
 	}

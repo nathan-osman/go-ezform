@@ -15,16 +15,6 @@ func NewBoolean(validators ...interface{}) *Boolean {
 	}
 }
 
-// NewBooleanWithDefault creates a new boolean field with the specified default value and validators.
-func NewBooleanWithDefault(value bool, validators ...interface{}) *Boolean {
-	return &Boolean{
-		Field: Field{
-			Validators: validators,
-		},
-		value: value,
-	}
-}
-
 // Parse ensures that the provided value is valid.
 func (b *Boolean) Parse(value string) error {
 	b.value = len(value) != 0
@@ -34,4 +24,9 @@ func (b *Boolean) Parse(value string) error {
 // Value retrieves the current value of the field.
 func (b Boolean) Value() bool {
 	return b.value
+}
+
+// SetValue sets the value of the field.
+func (b *Boolean) SetValue(value bool) {
+	b.value = value
 }

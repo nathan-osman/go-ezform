@@ -22,8 +22,9 @@ func TestNewBoolean(t *testing.T) {
 	}
 }
 
-func TestNewBooleanWithDefault(t *testing.T) {
-	f := NewBooleanWithDefault(true)
+func TestBooleanSetValue(t *testing.T) {
+	f := NewBoolean()
+	f.SetValue(true)
 	if f.Value() != true {
 		t.Fatalf("%v != %v", f.Value(), true)
 	}

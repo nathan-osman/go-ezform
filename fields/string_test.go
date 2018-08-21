@@ -16,8 +16,9 @@ func TestNewString(t *testing.T) {
 	}
 }
 
-func TestNewStringWithDefault(t *testing.T) {
-	f := NewStringWithDefault(strVal)
+func TestStringSetValue(t *testing.T) {
+	f := NewString()
+	f.SetValue(strVal)
 	if f.Value() != strVal {
 		t.Fatalf("%v != %v", f.Value(), strVal)
 	}
