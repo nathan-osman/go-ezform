@@ -13,14 +13,14 @@ func TestNewInteger(t *testing.T) {
 		Error  error
 	}{
 		{Input: "", Error: errInvalidInteger},
-		{Input: "-42", Output: -42, Error: nil},
+		{Input: "-42", Output: -42},
 	} {
 		f := NewInteger()
 		if err := f.Parse(test.Input); err != test.Error {
 			t.Fatalf("%v != %v", err, test.Error)
 		}
 		if f.Value() != test.Output {
-			t.Fatalf("%v != %v", f.Value(), strVal)
+			t.Fatalf("%v != %v", f.Value(), test.Output)
 		}
 	}
 }
