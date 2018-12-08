@@ -34,6 +34,11 @@ func (i *Integer) Parse(value string) error {
 	return nil
 }
 
+// String returns a string representation of the field.
+func (i Integer) String() string {
+	return strconv.FormatInt(i.value, 10)
+}
+
 // Value retrieves the current value of the field.
 func (i Integer) Value() int64 {
 	return i.value

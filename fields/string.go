@@ -21,6 +21,11 @@ func (s *String) Parse(value string) error {
 	return nil
 }
 
+// String returns a string representation of the field.
+func (s String) String() string {
+	return s.value
+}
+
 // Value retrieves the current value of the field.
 func (s String) Value() string {
 	return s.value

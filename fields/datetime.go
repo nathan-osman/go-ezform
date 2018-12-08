@@ -34,8 +34,13 @@ func (d *DateTime) Parse(value string) error {
 	return nil
 }
 
+// String returns a string representation of the date in ISO 8601 format.
+func (d DateTime) String() string {
+	return d.value.Format(time.RFC3339)
+}
+
 // Value retrieves the current value of the field.
-func (d *DateTime) Value() time.Time {
+func (d DateTime) Value() time.Time {
 	return d.value
 }
 

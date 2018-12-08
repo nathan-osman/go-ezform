@@ -4,23 +4,32 @@ import (
 	"testing"
 )
 
-const intVal = 42
+const (
+	intVal    = -42
+	intValStr = "-42"
+)
 
 func TestNewInteger(t *testing.T) {
 	for _, test := range []struct {
 		Input  string
-		Output int64
 		Error  error
+		String string
+		Value  int64
 	}{
 		{Input: "", Error: errInvalidInteger},
-		{Input: "-42", Output: -42},
+		{Input: intValStr, String: intValStr, Value: intVal},
 	} {
 		f := NewInteger()
 		if err := f.Parse(test.Input); err != test.Error {
 			t.Fatalf("%v != %v", err, test.Error)
 		}
-		if f.Value() != test.Output {
-			t.Fatalf("%v != %v", f.Value(), test.Output)
+		if test.Error == nil {
+			if f.String() != test.String {
+				t.Fatalf("%v != %v", f.String(), test.String)
+			}
+			if f.Value() != test.Value {
+				t.Fatalf("%v != %v", f.Value(), test.Value)
+			}
 		}
 	}
 }

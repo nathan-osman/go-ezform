@@ -11,6 +11,9 @@ func TestNewString(t *testing.T) {
 	if err := f.Parse(strVal); err != nil {
 		t.Fatal(err)
 	}
+	if f.String() != strVal {
+		t.Fatalf("%v != %v", f.String(), strVal)
+	}
 	if f.Value() != strVal {
 		t.Fatalf("%v != %v", f.Value(), strVal)
 	}
